@@ -23,6 +23,8 @@ Commands:
   untag   Remove a tag from a person
   dates   Show upcoming date events
   search  Search across all fields, notes, and tags
+  export  Export all data to a JSON file
+  import  Import data from a JSON file
   help    Print this message or the help of the given subcommand(s)
 
 Options:
@@ -90,6 +92,21 @@ Full-text search across names, emails, companies, notes, tags, and custom fields
 ```bash
 ppl search "acme"
 ppl search "birthday party"
+```
+
+## Export and import
+
+Move your data between machines with JSON export/import:
+
+```bash
+# Export to a file
+ppl export ~/ppl-backup.json
+
+# Export to stdout (for piping)
+ppl export
+
+# Import on another machine
+ppl import ~/ppl-backup.json
 ```
 
 ## Global flags
