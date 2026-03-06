@@ -1,6 +1,6 @@
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct Person {
     pub id: i64,
     pub name: String,
@@ -17,7 +17,7 @@ pub struct Person {
     pub updated_at: String,
 }
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct Relationship {
     pub id: i64,
     pub person_id: i64,
@@ -27,13 +27,13 @@ pub struct Relationship {
     pub created_at: String,
 }
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct Tag {
     pub id: i64,
     pub name: String,
 }
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct Note {
     pub id: i64,
     pub person_id: i64,
@@ -41,7 +41,7 @@ pub struct Note {
     pub created_at: String,
 }
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct CustomField {
     pub id: i64,
     pub person_id: i64,
@@ -58,7 +58,7 @@ pub struct DateEvent {
     pub subject_name: String,
 }
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct PersonDetail {
     pub person: Person,
     pub relationships: Vec<Relationship>,

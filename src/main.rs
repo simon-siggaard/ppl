@@ -6,7 +6,7 @@ mod interactive;
 mod models;
 mod search;
 
-use anyhow::{bail, Result};
+use anyhow::{bail, Context, Result};
 use clap::Parser;
 
 use cli::{Cli, Command};
@@ -226,6 +226,58 @@ fn main() -> Result<()> {
                     println!("  {} — {}", r.person_name, r.match_context);
                 }
             }
+        }
+
+        Command::Export { path } => {
+            let people = db::people::list_all(&conn, "name")?;
+            let mut details: Vec<PersonDetail> = Vec::new();
+            for p in &people {
+                details.push(load_detail(&conn, p.id)?);
+            }
+            let json = serde_json::to_string_pretty(&details)?;
+            match path {
+                Some(p) => {
+                    std::fs::write(&p, &json)
+                        .with_context(|| format!("Failed to write {p}"))?;
+                    println!("Exported {} people to {p}.", details.len());
+                }
+                None => println!("{json}"),
+            }
+        }
+
+        Command::Import { path } => {
+            let data = std::fs::read_to_string(&path)
+                .with_context(|| format!("Failed to read {path}"))?;
+            let details: Vec<PersonDetail> = serde_json::from_str(&data)
+                .with_context(|| "Failed to parse JSON")?;
+            let mut count = 0;
+            for detail in &details {
+                let p = &detail.person;
+                let id = db::people::insert_full(
+                    &conn, &p.name, p.nickname.as_deref(), p.email.as_deref(),
+                    p.phone.as_deref(), p.company.as_deref(), p.team.as_deref(),
+                    p.department.as_deref(), p.job_title.as_deref(),
+                    p.birthday.as_deref(), p.employment_date.as_deref(),
+                    &p.created_at, &p.updated_at,
+                )?;
+                for rel in &detail.relationships {
+                    db::relationships::add(
+                        &conn, id, &rel.rel_type, &rel.name,
+                        rel.birthday.as_deref(),
+                    )?;
+                }
+                for tag in &detail.tags {
+                    db::tags::add_tag(&conn, id, tag)?;
+                }
+                for note in &detail.notes {
+                    db::notes::add(&conn, id, &note.content)?;
+                }
+                for cf in &detail.custom_fields {
+                    db::custom_fields::set(&conn, id, &cf.key, &cf.value)?;
+                }
+                count += 1;
+            }
+            println!("Imported {count} people.");
         }
     }
 

@@ -124,4 +124,14 @@ pub enum Command {
         /// Search query
         query: String,
     },
+    /// Export all data to a JSON file
+    Export {
+        /// Output file path (defaults to stdout)
+        path: Option<String>,
+    },
+    /// Import data from a JSON file
+    Import {
+        /// Input file path
+        path: String,
+    },
 }

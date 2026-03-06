@@ -10,6 +10,30 @@ pub fn insert(conn: &Connection, name: &str) -> Result<i64> {
     Ok(conn.last_insert_rowid())
 }
 
+#[allow(clippy::too_many_arguments)]
+pub fn insert_full(
+    conn: &Connection,
+    name: &str,
+    nickname: Option<&str>,
+    email: Option<&str>,
+    phone: Option<&str>,
+    company: Option<&str>,
+    team: Option<&str>,
+    department: Option<&str>,
+    job_title: Option<&str>,
+    birthday: Option<&str>,
+    employment_date: Option<&str>,
+    created_at: &str,
+    updated_at: &str,
+) -> Result<i64> {
+    conn.execute(
+        "INSERT INTO people (name, nickname, email, phone, company, team, department, job_title, birthday, employment_date, created_at, updated_at)
+         VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12)",
+        params![name, nickname, email, phone, company, team, department, job_title, birthday, employment_date, created_at, updated_at],
+    )?;
+    Ok(conn.last_insert_rowid())
+}
+
 pub fn update_field(conn: &Connection, id: i64, field: &str, value: Option<&str>) -> Result<()> {
     let allowed = [
         "name",
