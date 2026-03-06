@@ -10,7 +10,7 @@ clap = { version = "4", features = ["derive"] }
 comfy-table = "7"
 dirs = "6"
 fuzzy-matcher = "0.3"
-inquire = "0.7"
+inquire = { version = "0.7", features = ["fuzzy"] }
 owo-colors = "4"
 rusqlite = { version = "0.32", features = ["bundled"] }
 serde = { version = "1", features = ["derive"] }

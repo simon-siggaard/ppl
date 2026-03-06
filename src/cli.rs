@@ -46,8 +46,8 @@ pub enum Command {
     },
     /// Edit an existing person
     Edit {
-        /// Name to search for
-        name: String,
+        /// Name to search for (omit for fuzzy picker)
+        name: Option<String>,
         #[arg(long)]
         nickname: Option<String>,
         #[arg(long)]
@@ -71,8 +71,8 @@ pub enum Command {
     },
     /// Show details for a person
     Show {
-        /// Name to search for
-        name: String,
+        /// Name to search for (omit for fuzzy picker)
+        name: Option<String>,
     },
     /// List all people
     List {
@@ -88,29 +88,31 @@ pub enum Command {
     },
     /// Remove a person
     Rm {
-        /// Name to search for
-        name: String,
+        /// Name to search for (omit for fuzzy picker)
+        name: Option<String>,
     },
     /// Add a note to a person
     Note {
-        /// Name to search for
-        name: String,
+        /// Name to search for (omit for fuzzy picker)
+        name: Option<String>,
         /// Note text
-        text: String,
+        text: Option<String>,
     },
     /// Add a tag to a person
     Tag {
-        /// Name to search for
-        name: String,
+        /// Name to search for (omit for fuzzy picker)
+        name: Option<String>,
         /// Tag to add
-        tag: String,
+        #[arg(long)]
+        tag: Option<String>,
     },
     /// Remove a tag from a person
     Untag {
-        /// Name to search for
-        name: String,
+        /// Name to search for (omit for fuzzy picker)
+        name: Option<String>,
         /// Tag to remove
-        tag: String,
+        #[arg(long)]
+        tag: Option<String>,
     },
     /// Show upcoming date events
     Dates {

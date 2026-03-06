@@ -1,6 +1,7 @@
-use anyhow::Result;
-use inquire::Text;
+use anyhow::{bail, Result};
+use inquire::{Select, Text};
 
+use crate::db;
 use crate::models::Person;
 
 pub struct PersonFields {
@@ -63,6 +64,22 @@ pub fn prompt_edit(person: &Person) -> Result<PersonFields> {
             person.employment_date.as_deref(),
         )?,
     })
+}
+
+pub fn pick_person(conn: &rusqlite::Connection) -> Result<(i64, String)> {
+    let people = db::people::list_all(conn, "name")?;
+    if people.is_empty() {
+        bail!("No people in the database.");
+    }
+    let options: Vec<String> = people.iter().map(|p| p.name.clone()).collect();
+    let ids: Vec<i64> = people.iter().map(|p| p.id).collect();
+    let selection = Select::new("Select a person:", options).prompt()?;
+    let idx = ids
+        .iter()
+        .zip(people.iter())
+        .position(|(_, p)| p.name == selection)
+        .unwrap();
+    Ok((ids[idx], selection))
 }
 
 pub fn disambiguate(matches: &[(i64, String)]) -> Result<(i64, String)> {

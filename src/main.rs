@@ -83,7 +83,7 @@ fn main() -> Result<()> {
             employment_date,
             set_name,
         } => {
-            let (id, _resolved) = resolve_person(&conn, &name)?;
+            let (id, _resolved) = resolve_person(&conn, name.as_deref())?;
 
             let has_flags = nickname.is_some()
                 || email.is_some()
@@ -125,7 +125,7 @@ fn main() -> Result<()> {
         }
 
         Command::Show { name } => {
-            let (id, _) = resolve_person(&conn, &name)?;
+            let (id, _) = resolve_person(&conn, name.as_deref())?;
             let detail = load_detail(&conn, id)?;
             if cli.json {
                 println!("{}", serde_json::to_string_pretty(&detail)?);
@@ -148,7 +148,7 @@ fn main() -> Result<()> {
         }
 
         Command::Rm { name } => {
-            let (id, resolved) = resolve_person(&conn, &name)?;
+            let (id, resolved) = resolve_person(&conn, name.as_deref())?;
             let confirm = inquire::Confirm::new(&format!("Delete {resolved}?"))
                 .with_default(false)
                 .prompt()?;
@@ -161,7 +161,11 @@ fn main() -> Result<()> {
         }
 
         Command::Note { name, text } => {
-            let (id, resolved) = resolve_person(&conn, &name)?;
+            let (id, resolved) = resolve_person(&conn, name.as_deref())?;
+            let text = match text {
+                Some(t) => t,
+                None => inquire::Text::new("Note:").prompt()?,
+            };
             db::notes::add(&conn, id, &text)?;
             if cli.json {
                 let notes = db::notes::list_for_person(&conn, id)?;
@@ -172,13 +176,27 @@ fn main() -> Result<()> {
         }
 
         Command::Tag { name, tag } => {
-            let (id, resolved) = resolve_person(&conn, &name)?;
+            let (id, resolved) = resolve_person(&conn, name.as_deref())?;
+            let tag = match tag {
+                Some(t) => t,
+                None => inquire::Text::new("Tag:").prompt()?,
+            };
             db::tags::add_tag(&conn, id, &tag)?;
             println!("Tagged {resolved} with \"{tag}\".");
         }
 
         Command::Untag { name, tag } => {
-            let (id, resolved) = resolve_person(&conn, &name)?;
+            let (id, resolved) = resolve_person(&conn, name.as_deref())?;
+            let tag = match tag {
+                Some(t) => t,
+                None => {
+                    let tags = db::tags::list_for_person(&conn, id)?;
+                    if tags.is_empty() {
+                        bail!("{resolved} has no tags.");
+                    }
+                    inquire::Select::new("Select tag to remove:", tags).prompt()?
+                }
+            };
             if db::tags::remove_tag(&conn, id, &tag)? {
                 println!("Removed tag \"{tag}\" from {resolved}.");
             } else {
@@ -214,12 +232,17 @@ fn main() -> Result<()> {
     Ok(())
 }
 
-fn resolve_person(conn: &rusqlite::Connection, query: &str) -> Result<(i64, String)> {
-    let matches = db::people::resolve_name(conn, query)?;
-    match matches.len() {
-        0 => bail!("No person found matching \"{query}\"."),
-        1 => Ok(matches.into_iter().next().unwrap()),
-        _ => interactive::disambiguate(&matches),
+fn resolve_person(conn: &rusqlite::Connection, query: Option<&str>) -> Result<(i64, String)> {
+    match query {
+        Some(q) => {
+            let matches = db::people::resolve_name(conn, q)?;
+            match matches.len() {
+                0 => bail!("No person found matching \"{q}\"."),
+                1 => Ok(matches.into_iter().next().unwrap()),
+                _ => interactive::disambiguate(&matches),
+            }
+        }
+        None => interactive::pick_person(conn),
     }
 }
 
